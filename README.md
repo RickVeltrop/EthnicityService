@@ -15,7 +15,9 @@ A Roblox module that allows developers to create lifelike recreations of segrega
 ## Installation
 
 1. Insert a ModuleScript anywhere inside your game (ReplicatedStorage or ServerStorage is recommended)
-2. Require() the ModuleScript and consult the API reference for instructions on this module's functionality.## API Reference
+2. Require() the ModuleScript and consult the API reference for instructions on this module's functionality.
+
+## API Reference
 
 #### GetSkinColorAsync
 Gets a player's skin color as Color3 value.
@@ -83,7 +85,8 @@ module:UpdateSkinEnforcementDarkness(MinimumSkinDarkness:number)
 Reverses `module:StartSkinDarknessEnforcement()`
 ```
 module:StopSkinDarknessEnforcement()
-```## FAQ
+```
+## FAQ
 
 #### Question 1: Is this real?
 
