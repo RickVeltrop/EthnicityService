@@ -4,30 +4,44 @@ A Roblox module that allows developers to create lifelike recreations of segrega
 
 # Table of Contents
 - [Installation](#installation)
+
 - [Documentation](##api-reference)
     - [GetSkinColorAsync](#getskincolorasync)
     - [GetSkinYellownessAsync](#getskinyellownessasync)
     - [GetSkinDarknessAsync](#getskindarknessasync)
+
     - [StartSkinDarknessEnforcement](#startskinDarknessenforcement)
-    - [UpdateSkinEnforcementDarkness](#updateskinenforcementdarkness)
+    - [MinSkinDarkness](#minskindarkness)
     - [StopSkinDarknessEnforcement](#stopskindarknessenforcement)
+
+    - [StartEthnicityDatastore](#startethnicitydatastore)
+    - [PauseEthnicityDatastore](#pauseethnicitydatastore)
+    - [ResumeEthnicityDatastore](#resumeethnicitydatastore)
+    - [UpdateSaveNewEthnicityData](#updatesavenewethnicitydata)
+
 - [FAQ](#faq)
+
+
+
 ## Installation
 
 1. Insert a ModuleScript anywhere inside your game (ReplicatedStorage or ServerStorage is recommended)
 2. Require() the ModuleScript and consult the API reference for instructions on this module's functionality.
+
+
 
 ## API Reference
 
 #### GetSkinColorAsync
 Gets a player's skin color as Color3 value.
 ```
-module:GetSkinColorAsync(UserId:number) : Color3
+module:GetSkinColorAsync(UserId:number, UseDatastoreDataIfPresent:boolean) : Color3
 ```
 
 | Parameter | Type     | Description                | Required |
 | :-------- | :------- | :------------------------- | :-: |
 | `UserId` | `number` | UserId of the player who's skin color to get. | ✅ |
+| `UserId` | `number` | Whether the function will attempt to look for saved data. Otherwise will use current character data. | ❌ |
 
 | Output | Type     | Description                |
 | :-------- | :------- | :------------------------- |
@@ -36,12 +50,13 @@ module:GetSkinColorAsync(UserId:number) : Color3
 #### GetSkinYellownessAsync
 Finds how yellow a person's skin color is percentually.
 ```
-module:GetSkinYellownessAsync(UserId) : number
+module:GetSkinYellownessAsync(UserId:number, UseDatastoreDataIfPresent:boolean) : number
 ```
 
 | Parameter | Type     | Description                | Required |
 | :-------- | :------- | :------------------------- | :-: |
 | `UserId` | `number` | UserId of the player who's skin yellowness to get. | ✅ |
+| `UserId` | `number` | Whether the function will attempt to look for saved data. Otherwise will use current character data. | ❌ |
 
 | Output | Type     | Description                |
 | :-------- | :------- | :------------------------- |
@@ -50,12 +65,13 @@ module:GetSkinYellownessAsync(UserId) : number
 #### GetSkinDarknessAsync
 Finds how dark a person's skin color is percentually.
 ```
-module:GetSkinDarknessAsync(UserId) : number
+module:GetSkinDarknessAsync(UserId:number, UseDatastoreDataIfPresent:boolean) : number
 ```
 
 | Parameter | Type     | Description                | Required |
 | :-------- | :------- | :------------------------- | :-: |
 | `UserId` | `number` | UserId of the player who's skin darkness to get. | ✅ |
+| `UserId` | `number` | Whether the function will attempt to look for saved data. Otherwise will use current character data. | ❌ |
 
 | Output | Type     | Description                |
 | :-------- | :------- | :------------------------- |
@@ -71,21 +87,56 @@ module:StartSkinDarknessEnforcement(MinimumSkinDarkness:number)
 | :-------- | :------- | :------------------------- | :-: |
 | `MinimumSkinDarkness` | `number` | The minimum GetSkinDarknessAsync required to be allowed in-game. | ✅ |
 
-#### UpdateSkinEnforcementDarkness
-Updates the minimum darkness level (0-100%) required to play.
+#### MinSkinDarkness
+The minimum GetSkinDarknessAsync required to be allowed in-game.
 ```
-module:UpdateSkinEnforcementDarkness(MinimumSkinDarkness:number)
+module.MinSkinDarkness = <0-100%>
 ```
-
-| Parameter | Type     | Description                | Required |
-| :-------- | :------- | :------------------------- | :-: |
-| `MinimumSkinDarkness` | `number` | The minimum GetSkinDarknessAsync required to be allowed in-game. | ✅ |
 
 #### StopSkinDarknessEnforcement
-Reverses `module:StartSkinDarknessEnforcement()`
+Reverses `module:StartSkinDarknessEnforcement()`.
 ```
 module:StopSkinDarknessEnforcement()
 ```
+
+#### StartEthnicityDatastore
+Starts up a datastore which prevents players from "cheating" by changing their characters.
+Makes use of Players.PlayerAdded, Players.PlayerRemoving and game:BindToClose.
+```
+module:StartEthnicityDatastore(Name:string, Scope:string?, Options:DataStoreOptions?, UpdateType:DatastoreUpdateType)
+```
+
+| Parameter | Type / Options     | Description                | Required |
+| :-------- | :------- | :------------------------- | :-: |
+| `Name` | `string` | The name of the datastore used by the module. | ✅ |
+| `Scope` | `string` | Scope that the module should save data into. | ❌ |
+| `Options` | `DataStoreOptions` | A DataStoreOptions instance passed directly into `DataStoreService:GetDataStore()`. | ❌ |
+| `UpdateType` | `'never' 'ifdarker' 'iflighter' 'always'` | Specifies in which cases new character data should be saved. Defaults to `always`. | ❌ |
+
+#### PauseEthnicityDatastore
+Pauses the events started by StartEthnicityDatastore.
+```
+module:PauseEthnicityDatastore()
+```
+
+#### ResumeEthnicityDatastore
+Resumes the events started by StartEthnicityDatastore after calling `module:PauseEthnicityDatastore()`.
+```
+module:ResumeEthnicityDatastore()
+```
+
+#### UpdateSaveNewEthnicityData
+Modifies the `UpdateType` value passed into `module:StartEthnicityDatastore()`.
+```
+module:UpdateSaveNewEthnicityData(UpdateType:DatastoreUpdateType)
+```
+
+| Parameter | Options     | Description                | Required |
+| :-------- | :------- | :------------------------- | :-: |
+| `UpdateType` | `'never' 'ifdarker' 'iflighter' 'always'` | Specifies in which cases new character data should be saved. | ✅ |
+
+
+
 ## FAQ
 
 #### Question 1: Is this real?

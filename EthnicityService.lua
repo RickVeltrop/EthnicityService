@@ -1,8 +1,14 @@
+--// Services
 local plrs = game:GetService('Players')
+local dss = game:GetService('DataStoreService')
 
-local MinSkinDarkness
-local SkinDarknessEnforcementEvent
+--// Variabls
+local DatastoreModule
+local Connections = {}
 
+--// Functions
+
+-- Counts non-nil values in a dictionary
 local function CountDict(Tbl)
 	local Count = 0
 	
@@ -11,9 +17,21 @@ local function CountDict(Tbl)
 	return Count
 end
 
+--// Types
+export type DatastoreUpdateType = 'never'|'ifdarker'|'iflighter'|'always'
+
+--// Module
 local module = {}
 
-function module:GetSkinColorAsync(UserId:number) : Color3
+-- The minimum GetSkinDarknessAsync required to be allowed in-game.
+module.MinSkinDarkness = nil
+
+-- Gets a player's skin color as Color3 value.
+function module:GetSkinColorAsync(UserId:number, UseDatastoreDataIfPresent:boolean) : Color3
+	if UseDatastoreDataIfPresent and DatastoreModule and DatastoreModule:TryGetPlayerDataFromCache(UserId) then
+		return DatastoreModule:TryGetPlayerDataFromCache(UserId).SkinColor
+	end
+	
 	local RequestedCharAppearance = plrs:GetCharacterAppearanceInfoAsync(UserId)
 	local BodyColors = RequestedCharAppearance.bodyColors
 	local BodyPartsCount = CountDict(BodyColors)
@@ -34,10 +52,16 @@ function module:GetSkinColorAsync(UserId:number) : Color3
 	local AvgG = TotalG / BodyPartsCount
 	local AvgB = TotalB / BodyPartsCount
 	local AvgSkinColor = Color3.new(AvgR, AvgG, AvgB)
+	
 	return AvgSkinColor
 end
 
-function module:GetSkinYellownessAsync(UserId) : number
+-- Finds how yellow a person's skin color is percentually.
+function module:GetSkinYellownessAsync(UserId:number, UseDatastoreDataIfPresent:boolean) : number
+	if UseDatastoreDataIfPresent and DatastoreModule and DatastoreModule:TryGetPlayerDataFromCache(UserId) then
+		return DatastoreModule:TryGetPlayerDataFromCache(UserId).SkinDarkness
+	end
+	
 	local RequestedCharAppearance = plrs:GetCharacterAppearanceInfoAsync(UserId)
 	local BodyColors = RequestedCharAppearance.bodyColors
 	local BodyPartsCount = CountDict(BodyColors)
@@ -56,7 +80,12 @@ function module:GetSkinYellownessAsync(UserId) : number
 	return math.round(AvgYellowness / 2.55)
 end
 
-function module:GetSkinDarknessAsync(UserId) : number
+-- Finds how dark a person's skin color is percentually.
+function module:GetSkinDarknessAsync(UserId:number, UseDatastoreDataIfPresent:boolean) : number
+	if UseDatastoreDataIfPresent and DatastoreModule and DatastoreModule:TryGetPlayerDataFromCache(UserId) then
+		return DatastoreModule:TryGetPlayerDataFromCache(UserId).SkinYellowness
+	end
+	
 	local RequestedCharAppearance = plrs:GetCharacterAppearanceInfoAsync(UserId)
 	local BodyColors = RequestedCharAppearance.bodyColors
 	local BodyPartsCount = CountDict(BodyColors)
@@ -77,12 +106,14 @@ function module:GetSkinDarknessAsync(UserId) : number
 	return math.round(AvgDarkness / 2.55)
 end
 
+-- Allows you to set a minimum darkness level (0-100%) required to play.
 function module:StartSkinDarknessEnforcement(MinimumSkinDarkness:number)
-	assert(not SkinDarknessEnforcementEvent, 'Skin darkness is already enforced.')
+	assert(not Connections['SkinDarknessEnforcementEvent'], 'Skin darkness is already enforced.')
+	assert(math.clamp(MinimumSkinDarkness, 0, 100) == MinimumSkinDarkness, 'MinimumSkinDarkness must be a number 0-100')
 	
-	MinSkinDarkness = math.clamp(MinimumSkinDarkness, 0, 255)
+	module.MinSkinDarkness = math.clamp(MinimumSkinDarkness, 0, 100)
 
-	SkinDarknessEnforcementEvent = plrs.PlayerAdded:Connect(function(Plr:Player)
+	Connections['SkinDarknessEnforcementEvent'] = plrs.PlayerAdded:Connect(function(Plr:Player)
 		local Darkness = module:GetSkinDarknessAsync(Plr.UserId)
 		
 		if Darkness <= MinimumSkinDarkness then
@@ -91,14 +122,41 @@ function module:StartSkinDarknessEnforcement(MinimumSkinDarkness:number)
 	end)
 end
 
-function module:UpdateSkinEnforcementDarkness(MinimumSkinDarkness:number)
-	MinSkinDarkness = math.clamp(MinimumSkinDarkness, 0, 255)
+-- Reverses module:StartSkinDarknessEnforcement()
+function module:StopSkinDarknessEnforcement()
+	assert(Connections['SkinDarknessEnforcementEvent'], 'Skin darkness is not currently enforced.')
+	
+	Connections['SkinDarknessEnforcementEvent']:Disconnect()
 end
 
-function module:StopSkinDarknessEnforcement()
-	assert(SkinDarknessEnforcementEvent, 'Skin darkness is not currently enforced.')
+-- Starts up a datastore which prevents players from "cheating" by changing their characters.
+function module:StartEthnicityDatastore(Name:string, Scope:string?, Options:DataStoreOptions?, UpdateType:DatastoreUpdateType)
+	assert(not DatastoreModule, 'EthnicityDatastore already started.')
+	local EthnicityDatastore = dss:GetDataStore(Name, Scope, Options)
 	
-	SkinDarknessEnforcementEvent:Disconnect()
+	DatastoreModule = require(script.Datastore)
+	DatastoreModule:Start(module, EthnicityDatastore, UpdateType)
+end
+
+-- Pauses the events started by StartEthnicityDatastore.
+function module:PauseEthnicityDatastore()
+	assert(DatastoreModule, 'EthnicityDatastore has not been started.')
+	
+	DatastoreModule:SetEventRunSwitch(true)
+end
+
+-- Resumes the events started by StartEthnicityDatastore after calling module:PauseEthnicityDatastore().
+function module:ResumeEthnicityDatastore()
+	assert(DatastoreModule, 'EthnicityDatastore has not been started.')
+	
+	DatastoreModule:SetEventRunSwitch(false)
+end
+
+-- Modifies the UpdateType value passed into module:StartEthnicityDatastore()
+function module:UpdateSaveNewEthnicityData(UpdateType:DatastoreUpdateType)
+	assert(DatastoreModule, 'EthnicityDatastore has not been started.')
+	
+	DatastoreModule:SetUpdateDatastoreValue(UpdateType)
 end
 
 return module
