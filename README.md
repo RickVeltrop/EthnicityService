@@ -6,18 +6,20 @@ A Roblox module that allows developers to create lifelike recreations of segrega
 - [Installation](#installation)
 
 - [Documentation](##api-reference)
-    - [GetSkinColorAsync](#getskincolorasync)
-    - [GetSkinYellownessAsync](#getskinyellownessasync)
-    - [GetSkinDarknessAsync](#getskindarknessasync)
-
     - [StartSkinDarknessEnforcement](#startskinDarknessenforcement)
     - [MinSkinDarkness](#minskindarkness)
     - [StopSkinDarknessEnforcement](#stopskindarknessenforcement)
 
-    - [StartEthnicityDatastore](#startethnicitydatastore)
-    - [PauseEthnicityDatastore](#pauseethnicitydatastore)
-    - [ResumeEthnicityDatastore](#resumeethnicitydatastore)
-    - [UpdateSaveNewEthnicityData](#updatesavenewethnicitydata)
+    - [Players](###players)
+        - [GetSkinColorAsync](#getskincolorasync)
+        - [GetSkinYellownessAsync](#getskinyellownessasync)
+        - [GetSkinDarknessAsync](#getskindarknessasync)
+
+    - [Datastore](###datastore)
+        - [StartEthnicityDatastore](#startethnicitydatastore)
+        - [PauseEthnicityDatastore](#pauseethnicitydatastore)
+        - [ResumeEthnicityDatastore](#resumeethnicitydatastore)
+        - [UpdateSaveNewEthnicityData](#updatesavenewethnicitydata)
 
 - [FAQ](#faq)
 
@@ -31,6 +33,30 @@ A Roblox module that allows developers to create lifelike recreations of segrega
 
 
 ## API Reference
+
+#### StartSkinDarknessEnforcement
+Allows you to set a minimum darkness level (0-100%) required to play.
+```
+module:StartSkinDarknessEnforcement(MinimumSkinDarkness:number)
+```
+
+| Parameter | Type     | Description                | Required |
+| :-------- | :------- | :------------------------- | :-: |
+| `MinimumSkinDarkness` | `number` | The minimum GetSkinDarknessAsync required to be allowed in-game. | ✅ |
+
+#### MinSkinDarkness
+The minimum GetSkinDarknessAsync required to be allowed in-game.
+```
+module.MinSkinDarkness = <0-100%>
+```
+
+#### StopSkinDarknessEnforcement
+Reverses `module:StartSkinDarknessEnforcement()`.
+```
+module:StopSkinDarknessEnforcement()
+```
+
+### Players
 
 #### GetSkinColorAsync
 Gets a player's skin color as Color3 value.
@@ -75,29 +101,9 @@ module:GetSkinDarknessAsync(UserId:number, UseDatastoreDataIfPresent:boolean) : 
 
 | Output | Type     | Description                |
 | :-------- | :------- | :------------------------- |
-| `Darkness` | `number` | 0-100; % of light reflected by the player's skin |
+| `Darkness` | `number` | 0-100; % of pigment in a players average skin color |
 
-#### StartSkinDarknessEnforcement
-Allows you to set a minimum darkness level (0-100%) required to play.
-```
-module:StartSkinDarknessEnforcement(MinimumSkinDarkness:number)
-```
-
-| Parameter | Type     | Description                | Required |
-| :-------- | :------- | :------------------------- | :-: |
-| `MinimumSkinDarkness` | `number` | The minimum GetSkinDarknessAsync required to be allowed in-game. | ✅ |
-
-#### MinSkinDarkness
-The minimum GetSkinDarknessAsync required to be allowed in-game.
-```
-module.MinSkinDarkness = <0-100%>
-```
-
-#### StopSkinDarknessEnforcement
-Reverses `module:StartSkinDarknessEnforcement()`.
-```
-module:StopSkinDarknessEnforcement()
-```
+### Datastore
 
 #### StartEthnicityDatastore
 Starts up a datastore which prevents players from "cheating" by changing their characters.
