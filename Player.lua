@@ -1,16 +1,36 @@
 --// Services
 local plrs = game:GetService('Players')
 
+--// Modules
+local Internals = require(script.Parent.Internal)
+
 --// Variables
 local MainModule
-local Internals
 
 --// Types
 export type module = {
 	GetSkinColorAsync: (UserId:number, UseDatastoreDataIfPresent:boolean) -> Color3,
 	GetSkinYellownessAsync: (UserId:number, UseDatastoreDataIfPresent:boolean) -> number,
-	GetSkinDarknessAsync: (UserId:number, UseDatastoreDataIfPresent:boolean) -> number
+	GetSkinDarknessAsync: (UserId:number, UseDatastoreDataIfPresent:boolean) -> number,
+
+	GetCharSkinColor: (Character:Model) -> Color3,
+	GetCharSkinYellowness: (Character:Model) -> number,
+	GetCharSkinDarkness: (Character:Model) -> number
 }
+
+--// Functions
+local function GetCharacterSkinColor(Character:Model)
+	local Colors = {}
+
+	for i,v in Character:GetChildren() do
+		if not v:IsA('BasePart') then continue end
+		if v.Name == 'HumanoidRootPart' then continue end
+
+		table.insert(Colors, v.Color)
+	end
+
+	return Colors
+end
 
 local module = {}
 
@@ -22,26 +42,11 @@ function module:GetSkinColorAsync(UserId:number, UseDatastoreDataIfPresent:boole
 
 	local RequestedCharAppearance = plrs:GetCharacterAppearanceInfoAsync(UserId)
 	local BodyColors = RequestedCharAppearance.bodyColors
-	local BodyPartsCount = Internals:CountDict(BodyColors)
 
-	local TotalR = 0
-	local TotalG = 0
-	local TotalB = 0
+	local ColorsArray = {}
+	for i,v in BodyColors do table.insert(ColorsArray, v) end
 
-	for i,v in BodyColors do
-		local Color = BrickColor.new(v).Color
-
-		TotalR += Color.R * 255
-		TotalG += Color.G * 255
-		TotalB += Color.B * 255
-	end
-
-	local AvgR = TotalR / BodyPartsCount
-	local AvgG = TotalG / BodyPartsCount
-	local AvgB = TotalB / BodyPartsCount
-	local AvgSkinColor = Color3.new(AvgR, AvgG, AvgB)
-
-	return AvgSkinColor
+	return Internals:AverageColor3(ColorsArray)
 end
 
 -- Finds how yellow a person's skin color is percentually.
@@ -52,19 +57,13 @@ function module:GetSkinYellownessAsync(UserId:number, UseDatastoreDataIfPresent:
 
 	local RequestedCharAppearance = plrs:GetCharacterAppearanceInfoAsync(UserId)
 	local BodyColors = RequestedCharAppearance.bodyColors
-	local BodyPartsCount = Internals:CountDict(BodyColors)
 
-	local TotalR = 0
-	local TotalG = 0
+	local ColorsArray = {}
+	for i,v in BodyColors do table.insert(ColorsArray, v) end
 
-	for i,v in BodyColors do
-		local Color = BrickColor.new(v).Color
-
-		TotalR += Color.R * 255
-		TotalG += Color.G * 255
-	end
-
-	local AvgYellowness = ((TotalR / BodyPartsCount) + (TotalG / BodyPartsCount)) / 3
+	local AvgColor = Internals:AverageColor3(ColorsArray)
+	local AvgYellowness = (AvgColor.R + AvgColor.G) / 2
+	
 	return math.round(AvgYellowness / 2.55)
 end
 
@@ -76,33 +75,52 @@ function module:GetSkinDarknessAsync(UserId:number, UseDatastoreDataIfPresent:bo
 
 	local RequestedCharAppearance = plrs:GetCharacterAppearanceInfoAsync(UserId)
 	local BodyColors = RequestedCharAppearance.bodyColors
-	local BodyPartsCount = Internals:CountDict(BodyColors)
 
-	local TotalR = 0
-	local TotalG = 0
-	local TotalB = 0
+	local ColorsArray = {}
+	for i,v in BodyColors do table.insert(ColorsArray, v) end
 
-	for i,v in BodyColors do
-		local Color = BrickColor.new(v).Color
+	local AvgColor = Internals:AverageColor3(ColorsArray)
+	local AvgDarkness = (AvgColor.R + AvgColor.G + AvgColor.B) / 3
+	
+	return 100 - math.round(AvgDarkness / 2.55)
+end
 
-		TotalR += Color.R * 255
-		TotalG += Color.G * 255
-		TotalB += Color.B * 255
-	end
+-- Gets a character's skin color as Color3 value.
+function module:GetCharSkinColor(Character:model) : Color3
+	local BodyColors = GetCharacterSkinColor(Character)
 
-	local AvgDarkness = ((TotalR / BodyPartsCount) + (TotalG / BodyPartsCount) + (TotalB / BodyPartsCount)) / 3
+	return Internals:AverageColor3(BodyColors)
+end
+
+-- Finds how yellow a character's skin color is percentually.
+function module:GetCharSkinYellowness(Character:model) : number
+	local BodyColors = GetCharacterSkinColor(Character)
+
+	local AvgColor = Internals:AverageColor3(BodyColors)
+	local AvgYellowness = (AvgColor.R + AvgColor.G) / 2
+
+	return math.round(AvgYellowness / 2.55)
+end
+
+-- Finds how dark a person's skin color is percentually.
+function module:GetCharSkinDarkness(Character:model) : number
+	local BodyColors = GetCharacterSkinColor(Character)
+
+	local AvgColor = Internals:AverageColor3(BodyColors)
+	local AvgDarkness = (AvgColor.R + AvgColor.G + AvgColor.B) / 3
+
 	return 100 - math.round(AvgDarkness / 2.55)
 end
 
 
-
-function module:Setup(Main, Internal)
+export type module = typeof(module)
+function module:Setup(Main) : module
 	MainModule = Main
-	Internals = Internal
-	
+
 	module.Setup = nil
-	
+
 	return module
 end
+
 
 return module

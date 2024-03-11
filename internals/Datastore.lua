@@ -3,11 +3,11 @@ local plrs = game:GetService('Players')
 
 --// Variables
 local EthnicityDatastore
-local ParentModule
+local MainModule
 
 local PlrData = {}
 local RunEvents = true
-local UpdateDatastoreType = 'always'
+local UpdateDatastoreType
 
 --// Functions
 
@@ -34,9 +34,9 @@ end
 local function GetNewPlrData(Plr:Player)
 	local NewData = {}
 	
-	NewData.SkinDarkness = ParentModule:GetSkinDarknessAsync(Plr.UserId)
-	NewData.SkinYellowness = ParentModule:GetSkinYellownessAsync(Plr.UserId)
-	NewData.SkinColor = ParentModule:GetSkinColorAsync(Plr.UserId)
+	NewData.SkinDarkness = MainModule:GetSkinDarknessAsync(Plr.UserId)
+	NewData.SkinYellowness = MainModule:GetSkinYellownessAsync(Plr.UserId)
+	NewData.SkinColor = MainModule:GetSkinColorAsync(Plr.UserId)
 	
 	return NewData
 end
@@ -47,11 +47,11 @@ local function OnPlayerDataUpdate(Plr, CurrentData, KeyInfo)
 	NewData.SkinColor = Color3ToTable(NewData.SkinColor)
 	
 	if not CurrentData then return NewData end
-	if UpdateDatastoreType == 'never' then return end
+	if UpdateDatastoreType == MainModule.Enum.UpdateType.Never then return end
 	
 	local AverageSkinColorDifference = GetAverageColorFromTable(CurrentData.SkinColor) - GetAverageColorFromTable(NewData.SkinColor)
-	if UpdateDatastoreType == 'ifdarker' and AverageSkinColorDifference < 0 then return end
-	if UpdateDatastoreType == 'iflighter' and AverageSkinColorDifference > 0 then return end
+	if UpdateDatastoreType == MainModule.Enum.UpdateType.IfDarker and AverageSkinColorDifference < 0 then return end
+	if UpdateDatastoreType == MainModule.Enum.UpdateType.IfLighter and AverageSkinColorDifference > 0 then return end
 
 	return NewData
 end
@@ -107,11 +107,10 @@ game:BindToClose(BindToClose)
 --// Module
 local module = {}
 
--- Method used for dependency injection
-function module:Start(Module, Datastore:GlobalDataStore, UpdateType)
-	ParentModule = Module
-	EthnicityDatastore = Datastore
-	UpdateDatastoreType = UpdateType
+function module:Start(Module, Datastore:GlobalDataStore?, UpdateType)
+	MainModule = Module
+	EthnicityDatastore = Datastore or EthnicityDatastore
+	UpdateDatastoreType = UpdateType or Module.Enum.UpdateType.Always
 end
 
 -- Sets global UpdateDatastoreType

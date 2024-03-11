@@ -2,9 +2,9 @@
 local plrs = game:GetService('Players')
 local dss = game:GetService('DataStoreService')
 
---// Variables
+--// Modules
 local MainModule
-local Internals
+local Internals = require(script.Parent.Internal)
 
 --// Types
 export type DatastoreUpdateType = 'never'|'ifdarker'|'iflighter'|'always'
@@ -18,12 +18,12 @@ export type module = {
 local module = {}
 
 -- Starts up a datastore which prevents players from "cheating" by changing their characters.
-function module:StartEthnicityDatastore(Name:string, Scope:string?, Options:DataStoreOptions?, UpdateType:DatastoreUpdateType)
+function module:StartEthnicityDatastore(Name:string, Scope:string?, Options:DataStoreOptions?, UpdateType:Internals.UpdateType)
 	assert(not Internals.DatastoreLoaded, 'EthnicityDatastore already started.')
 	local EthnicityDatastore = dss:GetDataStore(Name, Scope, Options)
 
+	Internals.Datastore:Start(MainModule, EthnicityDatastore, UpdateType)
 	Internals.DatastoreLoaded = true
-	Internals.Datastore:Start(module, EthnicityDatastore, UpdateType)
 end
 
 -- Pauses the events started by StartEthnicityDatastore.
@@ -48,14 +48,14 @@ function module:UpdateSaveNewEthnicityData(UpdateType:DatastoreUpdateType)
 end
 
 
-
-function module:Setup(Main, Internal)
-	MainModule = Main
-	Internals = Internal
+export type module = typeof(module)
+function module:Setup(Module) : module
+	MainModule = Module
 
 	module.Setup = nil
 
 	return module
 end
+
 
 return module

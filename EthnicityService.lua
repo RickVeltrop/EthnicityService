@@ -2,9 +2,6 @@
 local plrs = game:GetService('Players')
 local dss = game:GetService('DataStoreService')
 
---// Modules
-local Internals = require(script.Internal)
-
 --// Variables
 local Connections = {}
 
@@ -15,8 +12,10 @@ local module = {}
 module.MinSkinDarkness = nil
 
 -- Module subdivisions
-module.Player = require(script.Player):Setup(module, Internals)
-module.Datastore = require(script.Datastore):Setup(module, Internals)
+module.Enum = require(script.Enum)
+module.Player = require(script.Player):Setup(module)
+module.Datastore = require(script.Datastore):Setup(module)
+require(script.Internal):Start(module)
 
 -- Allows you to set a minimum darkness level (0-100%) required to play.
 function module:StartSkinDarknessEnforcement(MinimumSkinDarkness:number)
@@ -41,4 +40,5 @@ function module:StopSkinDarknessEnforcement()
 	Connections['SkinDarknessEnforcementEvent']:Disconnect()
 end
 
+export type module = typeof(module)
 return module
